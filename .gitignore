@@ -1,0 +1,18 @@
+# Local Netlify folder
+.netlify/
+
+#Dépendances 
+node_modules/
+
+
+#Builds 
+dist/
+build/
+
+#OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+
+#env
+.env
