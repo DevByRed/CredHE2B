@@ -1,4 +1,5 @@
-/* ===== Accordéon (dépliable) ===== */
+/* ===== COURS ========================================================================================== */
+
 .ects-accordion {
   border: 1px solid #e7eefb;
   border-radius: 16px;
@@ -196,3 +197,98 @@ details > summary::-webkit-details-marker {
   outline: 3px solid #9db5ff;
   outline-offset: 2px;
 }
+
+/* ===== Campus picker – glass buttons ============================================================== */
+.campus-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.campus-btn {
+  --accent: #6b7280; /* valeur par défaut, surchargée plus bas */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-stroke: rgba(255, 255, 255, 0.6);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-stroke);
+  background: radial-gradient(
+      120% 120% at 0% 0%,
+      rgba(255, 255, 255, 0.75),
+      rgba(255, 255, 255, 0)
+    ),
+    linear-gradient(180deg, var(--glass-bg), rgba(255, 255, 255, 0.35));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 8px 18px rgba(16, 24, 40, 0.08);
+  color: #0b1a2a;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease,
+    color 0.2s ease;
+}
+
+.campus-btn img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+.campus-btn:hover {
+  transform: translateY(1px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 10px 22px rgba(16, 24, 40, 0.12);
+}
+
+.campus-btn.is-active {
+  color: #fff;
+  background: radial-gradient(
+      120% 120% at 0% 0%,
+      rgba(255, 255, 255, 0.35),
+      rgba(255, 255, 255, 0)
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 80%, #ffffff 20%),
+      var(--accent)
+    );
+  border-color: color-mix(in srgb, var(--accent) 70%, #ffffff 30%);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+/* Focus clavier accessible */
+.campus-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, #ffffff 45%);
+  outline-offset: 2px;
+  border-radius: 16px;
+}
+
+/* ===== Couleurs par campus (accents) ===== */
+/* valeurs approximatives cohérentes avec les logos fournis */
+.campus-btn[data-campus="ESI"] {
+  --accent: #2f5aff;
+} /* bleu ESI */
+.campus-btn[data-campus="ISIB"] {
+  --accent: #176bff;
+} /* bleu ISIB */
+.campus-btn[data-campus="IESSID"] {
+  --accent: #d57a00;
+} /* orange IESSID */
+.campus-btn[data-campus="ISES"] {
+  --accent: #8a0f1a;
+} /* bordeaux ISES */
+.campus-btn[data-campus="ISEK"] {
+  --accent: #61c200;
+} /* vert flashy ISEK */
+.campus-btn[data-campus="DEFRE"] {
+  --accent: #1f7a45;
+} /* vert Defré */

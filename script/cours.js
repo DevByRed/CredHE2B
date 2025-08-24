@@ -1,19 +1,45 @@
 /* =======================================================
-   Calculateur ECTS – CredESI (accordéon + liste B1)
+   Calculateur ECTS – CredESI (multi-campus + accordéon)
    ======================================================= */
 
-// ----- Chargement depuis la Function -----
-let B1_COURSES = [];
+let B1_COURSES = []; // tableau affiché à l'écran
+const DATA_BY_CAMPUS = {
+  ESI: [],
+  ISIB: [],
+  ISES: [],
+  ISEK: [],
+  DEFRE: [],
+  IESSID: [],
+};
 
-async function loadCoursesFromServer() {
-  const res = await fetch("/.netlify/functions/ects", { cache: "no-store" });
-  if (!res.ok) throw new Error("API ECTS: HTTP " + res.status);
-  const data = await res.json();
-  if (!Array.isArray(data) || data.length === 0)
-    throw new Error("API ECTS: JSON vide");
-  B1_COURSES = data; // {id,name,ects,q}
+const STORAGE_CAMPUS = "credesi.b1.campus";
+let currentCampus = localStorage.getItem(STORAGE_CAMPUS) || "ESI";
+function selKey() {
+  return `credesi.b1.selectedCourses.${currentCampus}`;
 }
 
+// ---------- Chargement serveur ----------
+async function loadCoursesFromServer(campus) {
+  try {
+    let url = null;
+    if (campus === "ESI") url = "/.netlify/functions/esi";
+    if (campus === "ISIB") url = "/.netlify/functions/isib";
+    // plus tard: ISES, ISEK, DEFRE, IESSID
+
+    if (!url) return [];
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API ${campus}: HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error("Format JSON invalide");
+    return data;
+  } catch (err) {
+    console.error("Erreur loadCourses:", campus, err);
+    return [];
+  }
+}
+
+// ---------- DOM ----------
 const ectsAccordion = document.getElementById("ects-accordion");
 const ectsBadge = document.getElementById("ects-badge");
 const listEl = document.getElementById("ects-list");
@@ -22,24 +48,24 @@ const barEl = document.getElementById("ects-progress");
 const tabs = [...document.querySelectorAll(".ects-tab")];
 const searchEl = document.getElementById("ects-search");
 const resetBtn = document.getElementById("ects-reset");
-const copyBtn = document.getElementById("ects-copy");
 
-const STORAGE_SEL = "credesi.b1.selectedCourses";
+let selected = new Set(JSON.parse(localStorage.getItem(selKey()) || "[]"));
 const STORAGE_ACO = "credesi.b1.ectsAccordionOpen";
-const selected = new Set(JSON.parse(localStorage.getItem(STORAGE_SEL) || "[]"));
 let currentTab = "ALL";
 let currentQuery = "";
 
+// ---------- Sélection ----------
 function saveSelected() {
-  localStorage.setItem(STORAGE_SEL, JSON.stringify([...selected]));
+  localStorage.setItem(selKey(), JSON.stringify([...selected]));
 }
+
 function totalECTS() {
-  const sum = B1_COURSES.reduce(
-    (s, c) => s + (selected.has(c.id) ? c.ects : 0),
-    0
+  return Math.min(
+    B1_COURSES.reduce((s, c) => s + (selected.has(c.id) ? c.ects : 0), 0),
+    60
   );
-  return Math.min(sum, 60); // pour la barre (affichage)
 }
+
 function updateSummary() {
   const t = totalECTS();
   sumEl.textContent = t;
@@ -49,21 +75,34 @@ function updateSummary() {
   }
   if (ectsBadge) ectsBadge.textContent = `${t}/60`;
 }
+
 function renderList() {
   listEl.innerHTML = "";
+
+  if (!B1_COURSES || B1_COURSES.length === 0) {
+    listEl.innerHTML = `<div style="padding:12px; color:#6b7a90;">
+      Aucune donnée pour ce campus pour l’instant.
+    </div>`;
+    return;
+  }
+
   B1_COURSES.filter((c) => currentTab === "ALL" || c.q === currentTab)
     .filter((c) => (c.name || "").toLowerCase().includes(currentQuery))
     .forEach((c) => {
       const row = document.createElement("div");
       row.className = "ects-row" + (selected.has(c.id) ? " is-checked" : "");
+
       const left = document.createElement("label");
       left.className = "ects-left";
+
       const chk = document.createElement("input");
       chk.type = "checkbox";
       chk.checked = selected.has(c.id);
+
       const name = document.createElement("span");
       name.className = "ects-name";
       name.textContent = c.name;
+
       const badge = document.createElement("div");
       badge.className = "ects-badge-ects";
       badge.textContent = `+${c.ects} ECTS`;
@@ -83,7 +122,7 @@ function renderList() {
     });
 }
 
-// Onglets
+// ---------- Onglets ----------
 tabs.forEach((t) =>
   t.addEventListener("click", () => {
     tabs.forEach((x) => {
@@ -98,14 +137,14 @@ tabs.forEach((t) =>
   })
 );
 
-// Recherche
+// ---------- Recherche ----------
 searchEl?.addEventListener("input", () => {
   currentQuery = searchEl.value.trim().toLowerCase();
   renderList();
   updateSummary();
 });
 
-// Réinitialiser
+// ---------- Réinitialiser ----------
 resetBtn?.addEventListener("click", () => {
   selected.clear();
   saveSelected();
@@ -113,7 +152,7 @@ resetBtn?.addEventListener("click", () => {
   updateSummary();
 });
 
-// Mémoriser l’état de l’accordéon
+// ---------- Accordéon ----------
 ectsAccordion?.addEventListener("toggle", () => {
   try {
     localStorage.setItem(STORAGE_ACO, ectsAccordion.open ? "1" : "0");
@@ -125,15 +164,69 @@ ectsAccordion?.addEventListener("toggle", () => {
   } catch {}
 })();
 
-// Init (on attend d'abord l'API, sinon fallback)
-// ----- Init -----
-(async function initECTS() {
-  try {
-    await loadCoursesFromServer();
-  } catch (e) {
-    alert("Impossible de charger les cours depuis l’ESI :", e);
-    B1_COURSES = []; // (tu peux mettre un fallback local ici si tu veux)
+// ---------- Campus picker ----------
+function setActiveCampusBtn(code) {
+  document.querySelectorAll(".campus-btn").forEach((b) => {
+    const isActive = b.dataset.campus === code;
+    b.classList.toggle("is-active", isActive);
+    b.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function resetTabsToAll() {
+  const all = document.querySelector('.ects-tab[data-tab="ALL"]');
+  tabs.forEach((x) => {
+    x.classList.remove("is-active");
+    x.setAttribute("aria-selected", "false");
+  });
+  if (all) {
+    all.classList.add("is-active");
+    all.setAttribute("aria-selected", "true");
   }
+  currentTab = "ALL";
+}
+
+async function switchCampus(code) {
+  currentCampus = code;
+  localStorage.setItem(STORAGE_CAMPUS, code);
+
+  // charger depuis serveur si pas déjà fait
+  if (DATA_BY_CAMPUS[code].length === 0) {
+    DATA_BY_CAMPUS[code] = await loadCoursesFromServer(code);
+  }
+
+  // assigner
+  B1_COURSES = DATA_BY_CAMPUS[code] || [];
+
+  // sélections
+  selected = new Set(JSON.parse(localStorage.getItem(selKey()) || "[]"));
+
+  // reset filtres
+  resetTabsToAll();
+  currentQuery = "";
+  if (searchEl) searchEl.value = "";
+
+  // render
+  renderList();
+  updateSummary();
+  setActiveCampusBtn(code);
+}
+
+// écouteurs
+document.querySelectorAll(".campus-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const code = btn.dataset.campus;
+    if (code) switchCampus(code);
+  });
+});
+setActiveCampusBtn(currentCampus);
+
+// ---------- Init ----------
+(async function initECTS() {
+  if (DATA_BY_CAMPUS[currentCampus].length === 0) {
+    DATA_BY_CAMPUS[currentCampus] = await loadCoursesFromServer(currentCampus);
+  }
+  B1_COURSES = DATA_BY_CAMPUS[currentCampus] || [];
   renderList();
   updateSummary();
 })();
