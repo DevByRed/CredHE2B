@@ -16,8 +16,16 @@
     "cheerio": "^1.1.2",
     "pdf-parse": "^1.1.1",
     "pdf2json": "^3.2.0",
-    "pdfjs-dist": "^3.4.120",
+    "pdfjs-dist": "^5.4.54",
     "playwright": "^1.55.0",
     "tesseract.js": "^6.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevByRed/CredHE2B.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DevByRed/CredHE2B/issues"
+  },
+  "homepage": "https://github.com/DevByRed/CredHE2B#readme"
 }
