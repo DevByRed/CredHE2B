@@ -1,8 +1,8 @@
 /* =======================================================
-   Calculateur ECTS – CredESI (multi-campus + accordéon)
+   Calculateur ECTS – CredESI (multi-campus + bacheliers)
    ======================================================= */
 
-let B1_COURSES = []; // tableau affiché à l'écran
+let B1_COURSES = [];
 const DATA_BY_CAMPUS = {
   ESI: [],
   ISIB: [],
@@ -19,24 +19,10 @@ function selKey() {
 }
 
 // ---------- Chargement serveur ----------
-async function loadCoursesFromServer(campus) {
-  try {
-    let url = null;
-    if (campus === "ESI") url = "/.netlify/functions/esi";
-    if (campus === "ISIB") url = "/.netlify/functions/isib";
-    // plus tard: ISES, ISEK, DEFRE, IESSID
-
-    if (!url) return [];
-
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`API ${campus}: HTTP ${res.status}`);
-    const data = await res.json();
-    if (!Array.isArray(data)) throw new Error("Format JSON invalide");
-    return data;
-  } catch (err) {
-    console.error("Erreur loadCourses:", campus, err);
-    return [];
-  }
+async function loadFromServer(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`API: HTTP ${res.status}`);
+  return await res.json();
 }
 
 // ---------- DOM ----------
@@ -48,6 +34,8 @@ const barEl = document.getElementById("ects-progress");
 const tabs = [...document.querySelectorAll(".ects-tab")];
 const searchEl = document.getElementById("ects-search");
 const resetBtn = document.getElementById("ects-reset");
+const bachelorPicker = document.getElementById("bachelor-picker");
+const bachelorSelect = document.getElementById("bachelorSelect");
 
 let selected = new Set(JSON.parse(localStorage.getItem(selKey()) || "[]"));
 const STORAGE_ACO = "credesi.b1.ectsAccordionOpen";
@@ -81,12 +69,12 @@ function renderList() {
 
   if (!B1_COURSES || B1_COURSES.length === 0) {
     listEl.innerHTML = `<div style="padding:12px; color:#6b7a90;">
-      Aucune donnée pour ce campus pour l’instant.
+      Aucune donnée pour ce campus/bachelier pour l’instant.
     </div>`;
     return;
   }
 
-  B1_COURSES.filter((c) => currentTab === "ALL" || c.q === currentTab)
+  B1_COURSES.filter((c) => currentTab === "ALL" || c.quadri === currentTab)
     .filter((c) => (c.name || "").toLowerCase().includes(currentQuery))
     .forEach((c) => {
       const row = document.createElement("div");
@@ -190,26 +178,58 @@ async function switchCampus(code) {
   currentCampus = code;
   localStorage.setItem(STORAGE_CAMPUS, code);
 
-  // charger depuis serveur si pas déjà fait
-  if (DATA_BY_CAMPUS[code].length === 0) {
-    DATA_BY_CAMPUS[code] = await loadCoursesFromServer(code);
+  let url = `/.netlify/functions/${code.toLowerCase()}`;
+  const data = await loadFromServer(url);
+
+  // Cas 1 : retour direct = liste de cours
+  if (Array.isArray(data) && data.length > 0 && data[0].ects) {
+    DATA_BY_CAMPUS[code] = data;
+    B1_COURSES = data;
+    selected = new Set(JSON.parse(localStorage.getItem(selKey()) || "[]"));
+    resetTabsToAll();
+    currentQuery = "";
+    renderList();
+    updateSummary();
+    setActiveCampusBtn(code);
+    bachelorPicker.classList.add("hidden");
+    return;
   }
 
-  // assigner
-  B1_COURSES = DATA_BY_CAMPUS[code] || [];
+  // Cas 2 : retour = liste de bacheliers
+  if (Array.isArray(data) && data.length > 0) {
+    bachelorPicker.classList.remove("hidden");
+    bachelorSelect.innerHTML = `<option value="">-- Sélectionne une option --</option>`;
+    data.forEach((b) => {
+      const opt = document.createElement("option");
+      opt.value = b.id;
+      opt.textContent = b.name;
+      bachelorSelect.appendChild(opt);
+    });
 
-  // sélections
-  selected = new Set(JSON.parse(localStorage.getItem(selKey()) || "[]"));
+    bachelorSelect.onchange = async () => {
+      if (!bachelorSelect.value) return;
+      const res2 = await fetch(
+        `/.netlify/functions/${code.toLowerCase()}?bachelor=${
+          bachelorSelect.value
+        }`
+      );
+      const courses = await res2.json();
+      DATA_BY_CAMPUS[code] = courses;
+      B1_COURSES = courses;
+      selected = new Set(JSON.parse(localStorage.getItem(selKey()) || "[]"));
+      resetTabsToAll();
+      currentQuery = "";
+      renderList();
+      updateSummary();
+      setActiveCampusBtn(code);
+    };
 
-  // reset filtres
-  resetTabsToAll();
-  currentQuery = "";
-  if (searchEl) searchEl.value = "";
-
-  // render
-  renderList();
-  updateSummary();
-  setActiveCampusBtn(code);
+    // ✅ Correction : sélectionner automatiquement le premier bachelier
+    if (data.length > 0) {
+      bachelorSelect.value = data[0].id;
+      bachelorSelect.onchange();
+    }
+  }
 }
 
 // écouteurs
@@ -223,10 +243,5 @@ setActiveCampusBtn(currentCampus);
 
 // ---------- Init ----------
 (async function initECTS() {
-  if (DATA_BY_CAMPUS[currentCampus].length === 0) {
-    DATA_BY_CAMPUS[currentCampus] = await loadCoursesFromServer(currentCampus);
-  }
-  B1_COURSES = DATA_BY_CAMPUS[currentCampus] || [];
-  renderList();
-  updateSummary();
+  await switchCampus(currentCampus);
 })();

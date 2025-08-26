@@ -292,3 +292,18 @@ details > summary::-webkit-details-marker {
 .campus-btn[data-campus="DEFRE"] {
   --accent: #1f7a45;
 } /* vert Defré */
+
+#bachelor-picker {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+#bachelorSelect {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #dbe7ff;
+  font-weight: 600;
+  min-width: 220px;
+}

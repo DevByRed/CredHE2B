@@ -1,42 +1,112 @@
-// netlify/functions/isib.js
-import fetch from "node-fetch";
-import PDFParser from "pdf2json";
-
-export async function handler() {
+export async function handler(event, context) {
   try {
-    const pdfUrl =
-      "https://he2b.be/wp-content/uploads/2024/09/ISIB-BAPSIE-Programmes-etudes-2024-2025.pdf";
+    const bachelors = [
+      {
+        id: "isib-prev",
+        name: "Conseiller en prévention, sécurité industrielle et environnement",
+      },
+    ];
 
-    // Télécharger le PDF
-    const pdfRes = await fetch(pdfUrl);
-    if (!pdfRes.ok)
-      throw new Error(`Erreur téléchargement PDF ${pdfRes.status}`);
-    const buffer = Buffer.from(await pdfRes.arrayBuffer());
+    // Si pas de paramètre → on renvoie juste la liste des bacheliers
+    const bachelor = event.queryStringParameters?.bachelor;
+    if (!bachelor) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify(bachelors),
+      };
+    }
 
-    // Parser avec pdf2json
-    const pdfParser = new PDFParser();
-
-    const text = await new Promise((resolve, reject) => {
-      pdfParser.on("pdfParser_dataError", (err) => reject(err.parserError));
-      pdfParser.on("pdfParser_dataReady", (pdfData) => {
-        const raw = pdfData.Pages.map((page) =>
-          page.Texts.map((t) =>
-            decodeURIComponent(t.R.map((r) => r.T).join(" "))
-          ).join(" ")
-        ).join("\n");
-        resolve(raw);
-      });
-
-      pdfParser.parseBuffer(buffer);
-    });
+    // Sinon → on renvoie les cours du bachelier choisi
+    if (bachelor === "isib-prev") {
+      const courses = [
+        {
+          code: "1SE0100",
+          name: "Anatomie, physiologie humaine et ergonomie",
+          ects: 4,
+          quadri: "Q1",
+        },
+        {
+          code: "1SE0200",
+          name: "Mathématiques et informatique",
+          ects: 6,
+          quadri: "Q1",
+        },
+        {
+          code: "1SE0300",
+          name: "Sciences fondamentales et appliquées 1",
+          ects: 6,
+          quadri: "Q1",
+        },
+        {
+          code: "1SE0400",
+          name: "Sciences fondamentales et appliquées 2",
+          ects: 6,
+          quadri: "Q1",
+        },
+        {
+          code: "1SE0500",
+          name: "Sciences humaines, sociales et gestion 1",
+          ects: 8,
+          quadri: "Q1",
+        },
+        {
+          code: "1SE1600",
+          name: "Communication et langues 1",
+          ects: 1,
+          quadri: "Q1",
+        },
+        {
+          code: "1SE0600",
+          name: "Sciences fondamentales et appliquées 3",
+          ects: 4,
+          quadri: "Q2",
+        },
+        { code: "1SE0700", name: "Chimie", ects: 6, quadri: "Q2" },
+        {
+          code: "1SE0900",
+          name: "Mécanique et résistance des matériaux",
+          ects: 4,
+          quadri: "Q2",
+        },
+        {
+          code: "1SE1000",
+          name: "Sciences humaines, sociales et de gestion 2",
+          ects: 2,
+          quadri: "Q2",
+        },
+        {
+          code: "1SE1300",
+          name: "Droit et environnement",
+          ects: 4,
+          quadri: "Q2",
+        },
+        {
+          code: "1SE1700",
+          name: "Communication et langues 2",
+          ects: 6,
+          quadri: "Q2",
+        },
+        {
+          code: "1SE1800",
+          name: "Visites d’entreprise et séminaires de sécurité",
+          ects: 3,
+          quadri: "Q2",
+        },
+      ];
+      return {
+        statusCode: 200,
+        body: JSON.stringify(courses),
+      };
+    }
 
     return {
-      statusCode: 200,
-      body: JSON.stringify({ raw: text }, null, 2),
-      headers: { "Content-Type": "application/json" },
+      statusCode: 404,
+      body: JSON.stringify({ error: "Bachelier non trouvé" }),
     };
   } catch (err) {
-    console.error("Erreur ISIB:", err);
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message }),
+    };
   }
 }
