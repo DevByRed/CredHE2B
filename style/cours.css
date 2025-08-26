@@ -204,6 +204,7 @@ details > summary::-webkit-details-marker {
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 14px;
+  justify-content: center;
 }
 
 .campus-btn {
