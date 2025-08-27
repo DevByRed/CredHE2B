@@ -16,6 +16,10 @@
   --err: #b11818;
   --err-bg: #ffecec;
   --err-bd: #f5bcbc;
+  --nav-bg: rgba(25, 25, 35, 0.65); /* fond sombre vitre */
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-light: rgba(255, 255, 255, 0.06);
+  --nav-dark: rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -26,13 +30,21 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   overscroll-behavior-x: none;
+  scroll-behavior: smooth;
 }
 body {
   margin: 0;
   font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, sans-serif;
   color: #0b1a2a;
-  background: linear-gradient(135deg, #eaf3ff 0%, #ffffff 100%);
+  /* Light mode background */
+  background: linear-gradient(
+    135deg,
+    #f6f8fb,
+    /* quasi blanc */ #e4ebf9,
+    /* bleu pastel */ #d2e1f7 /* bleu légèrement plus visible */
+  );
+  /* Light mode background */
   min-height: 100vh;
   display: flex;
   overflow-x: hidden;
@@ -505,12 +517,6 @@ footer {
   inset: 0 auto 0 0;
   width: 280px;
   max-width: 85vw;
-  background: linear-gradient(
-    180deg,
-    var(--esi-blue) 0%,
-    var(--esi-blue-700) 100%
-  );
-  color: #fff;
   transform: translateX(-100%);
   transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
   z-index: 65;
@@ -518,6 +524,15 @@ footer {
   overflow-y: auto;
   box-shadow: 12px 0 30px rgba(0, 0, 0, 0.2);
 }
+
+aside,
+.drawer {
+  /* ------------- */
+  background: #162447; /* bleu profond */
+  border-right: 1px solid rgba(0, 0, 0, 0.2);
+  /* ------------- */
+}
+
 .drawer.open {
   transform: translateX(0);
 }
@@ -585,4 +600,4 @@ footer {
 
 /* Animation d'apparition */
 
-/* ===== Campus picker ===== */
+/* ===== Scroll ===== */
