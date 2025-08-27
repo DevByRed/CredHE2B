@@ -74,6 +74,8 @@ function renderList() {
     return;
   }
 
+  const fragment = document.createDocumentFragment(); // ✅ Optimisation
+
   B1_COURSES.filter((c) => currentTab === "ALL" || c.quadri === currentTab)
     .filter((c) => (c.name || "").toLowerCase().includes(currentQuery))
     .forEach((c) => {
@@ -106,8 +108,11 @@ function renderList() {
       left.appendChild(name);
       row.appendChild(left);
       row.appendChild(badge);
-      listEl.appendChild(row);
+
+      fragment.appendChild(row); // ✅ Ajouter au fragment
     });
+
+  listEl.appendChild(fragment); // ✅ Injecter d’un coup
 }
 
 // ---------- Onglets ----------
@@ -178,6 +183,9 @@ async function switchCampus(code) {
   currentCampus = code;
   localStorage.setItem(STORAGE_CAMPUS, code);
 
+  // ✅ Afficher un loader immédiat
+  listEl.innerHTML = `<div class="loading">Chargement...</div>`;
+
   let url = `/.netlify/functions/${code.toLowerCase()}`;
   const data = await loadFromServer(url);
 
@@ -244,4 +252,14 @@ setActiveCampusBtn(currentCampus);
 // ---------- Init ----------
 (async function initECTS() {
   await switchCampus(currentCampus);
+
+  // ✅ Précharger les autres campus en arrière-plan
+  ["ESI", "ISIB", "ISES", "ISEK", "DEFRE", "IESSID"].forEach((code) => {
+    if (code !== currentCampus) {
+      fetch(`/.netlify/functions/${code.toLowerCase()}`)
+        .then((r) => r.json())
+        .then((d) => (DATA_BY_CAMPUS[code] = d))
+        .catch(() => {});
+    }
+  });
 })();

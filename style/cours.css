@@ -308,3 +308,13 @@ details > summary::-webkit-details-marker {
   font-weight: 600;
   min-width: 220px;
 }
+
+.ects-row {
+  transition: all 0.2s ease-in-out;
+}
+.loading {
+  padding: 12px;
+  text-align: center;
+  color: #6b7a90;
+  font-style: italic;
+}
