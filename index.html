@@ -2,15 +2,17 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>CredHE2B – HE2B</title>
-    <link rel="icon" href="img/Logo HE2B/Png/iconv2.png" />
-    <link rel="stylesheet" href="style/style.css" />
+    <link rel="icon" href="img/Logo HE2B/Png/iconv2.png"/>
+    <link rel="stylesheet" href="style/style.css"/>
     <link rel="stylesheet" href="style/cours.css">
     <link rel="stylesheet" href="style/pdf.css">
     <link rel="stylesheet" href="style/secretariat.css">
-    <link rel="stylesheet" href="style/loader.css" />
+    <link rel="stylesheet" href="style/loader.css"/>
     <link rel="stylesheet" href="style/glass.css">
+    <link rel="stylesheet" href="style/mise_a_jour_panneau.css"/>
+    <link rel="stylesheet" href="style/popup.css"/>
   </head>
   <body>
     <!--  -------------------------------------------------------- Overlay MOBILE ----------------------------------------------------------->
@@ -33,7 +35,41 @@
     <!-- Drawer mobile (reprend le contenu de l’aside) -->
     <nav class="drawer" id="drawer" aria-label="Menu mobile">
       <button class="close" id="btnClose" aria-label="Fermer">✕</button>
+ <!-- Mise a jour  -->
+  
+  <div class="update-box" onclick="toggleUpdateDetails(this)">
+  <div class="update-header">
+    <span>🚀 Mise à jour disponible</span>
+    <span class="version">v1.0</span>
+    <span class="toggle-icon">▼</span>
+  </div>
 
+  <div class="update-details">
+    <div class="update-item">
+      <span class="tag new">Nouveau</span> 
+      <ul>
+        <li>
+....
+        </li>
+      </ul>
+    </div>
+    <div class="update-item">
+      <span class="tag improved">Amélioré</span> 
+      <ul>
+        <li>📊 Calculateur ECTS</li>
+      </ul>
+    </div>
+    <div class="update-item">
+      <span class="tag fixed">Corrigé</span> 
+      <ul>
+        <li>🐞 Bugs mineurs</li>
+      </ul>
+    </div>
+    <div class="update-date">📅 Publié le : 27 août 2025</div>
+  </div>
+</div>
+
+   <!-- -------------------- -->
          <div class="sb-title">📌 Navigation</div>
 <div class="sb-links">
   <a href="#credits">🧮 Calcul de Crédits</a>
@@ -64,6 +100,42 @@
     </nav>
 
     <aside>
+ <!-- Mise a jour  -->
+  
+  <div class="update-box" onclick="toggleUpdateDetails(this)">
+  <div class="update-header">
+    <span>🚀 Mise à jour disponible</span>
+    <span class="version">v1.0</span>
+    <span class="toggle-icon">▼</span>
+  </div>
+
+  <div class="update-details">
+    <div class="update-item">
+      <span class="tag new">Nouveau</span> 
+      <ul>
+        <li>
+....
+        </li>
+      </ul>
+    </div>
+    <div class="update-item">
+      <span class="tag improved">Amélioré</span> 
+      <ul>
+        <li>📊 Calculateur ECTS</li>
+      </ul>
+    </div>
+    <div class="update-item">
+      <span class="tag fixed">Corrigé</span> 
+      <ul>
+        <li>🐞 Bugs mineurs</li>
+      </ul>
+    </div>
+    <div class="update-date">📅 Publié le : 27 août 2025</div>
+  </div>
+</div>
+
+   <!-- -------------------- -->
+
          <div class="sb-title">📌 Navigation</div>
 <div class="sb-links">
   <a href="#credits">🧮 Calcul de Crédits </a>
@@ -95,6 +167,14 @@
     </aside>
 
     <main>
+        <!-- Bandeau de mise à jour -->
+       <!--class :  show = Visible  | Hidden = caché -->
+<div id="update-banner" class="hidden">
+  <p>🔧 Mise à jour en cours – Fin estimée dans :  <span id="timer">14:36</span></p>
+  <div class="progress-bar">
+    <div id="progress"></div>
+  </div>
+</div>
       <img src="img/Logo HE2B/Png/4.png" alt="" width="400" />
       <h1>
         Un Suivi clair de tes crédits pour réussir ton Bloc 1 à l'HE2B
@@ -466,6 +546,25 @@ L’objectif est de vous donner une estimation la plus proche possible de votre 
       }
     });
   });
+
+function toggleUpdateDetails(box) {
+  const details = box.querySelector(".update-details");
+  const icon = box.querySelector(".toggle-icon");
+
+  // toggle ouverture / fermeture
+  box.classList.toggle("open");
+
+  if (box.classList.contains("open")) {
+    details.style.display = "block";
+    icon.textContent = "▲"; // flèche vers le haut
+  } else {
+    details.style.display = "none";
+    icon.textContent = "▼"; // flèche vers le bas
+  }
+}
+
+
+
 </script>
 
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -473,5 +572,6 @@ L’objectif est de vous donner une estimation la plus proche possible de votre 
     <script src="script/cours.js"></script>
     <script src="script/script.js"></script>
     <script src="script/loader.js"></script>
+    <script src="script/popup.js"></script>
   </body>
 </html>
