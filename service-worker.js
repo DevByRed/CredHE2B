@@ -1,7 +1,7 @@
 // Nom du cache → incrémente quand tu modifies des fichiers importants
-const CACHE_NAME = "credesi-cache-v3";
+const CACHE_NAME = "credhe2b-cache-v1";
 
-// Liste des fichiers à pré-cacher (modifie selon ton projet)
+// Liste des fichiers à pré-cacher (adapté à ton arborescence)
 const urlsToCache = [
   "/",
   "/index.html",
@@ -14,6 +14,7 @@ const urlsToCache = [
   "/style/pdf.css",
   "/style/popup.css",
   "/style/secretariat.css",
+  "/style/offline.css",
 
   // Scripts
   "/script/script.js",
@@ -22,20 +23,31 @@ const urlsToCache = [
   "/script/pdf.js",
   "/script/popup.js",
 
-  // Images / Logos
+  // Offline page
+  "/offline.html",
+
+  // PDF
+  "/pdf/PdfCredESI.pdf",
+
+  // Icônes PWA
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
-  "/img/Logo CredESI/CredESI-Logo1.png",
-  "/img/Logo CredESI/CredESI-Logo2.png",
-  "/img/Logo CredESI/iconv2.png",
-  "/img/Logo Discord/ESI1.png",
-  "/img/Logo Discord/ESI2.png",
 
-  // Page fallback offline
-  "/offline.html",
+  // Logos
+  "/img/Logo HE2B/Png/3.png",
+  "/img/Logo HE2B/Png/4.png",
+  "/img/Logo HE2B/Png/iconv2.png",
+
+  // Logos campus
+  "/img/campus/defre.png",
+  "/img/campus/esi.png",
+  "/img/campus/isessid.png",
+  "/img/campus/isek.png",
+  "/img/campus/ises.png",
+  "/img/campus/isib.png",
 ];
 
-// Installation → met les fichiers en cache
+// Installation → mise en cache initiale
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -45,7 +57,7 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Activation → supprime les vieux caches
+// Activation → supprime les anciens caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -61,14 +73,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch → stratégie "stale-while-revalidate"
+// Fetch → stratégie stale-while-revalidate
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((cachedResponse) => {
         const fetchPromise = fetch(event.request)
           .then((networkResponse) => {
-            // Si on a une bonne réponse → on la met à jour en cache
             if (
               networkResponse &&
               networkResponse.status === 200 &&
@@ -79,13 +90,10 @@ self.addEventListener("fetch", (event) => {
             return networkResponse;
           })
           .catch(() => {
-            // Si pas de réseau et pas de cache → renvoie offline.html
             if (event.request.mode === "navigate") {
               return cache.match("/offline.html");
             }
           });
-
-        // Renvoie le cache immédiatement si dispo, sinon attend le réseau
         return cachedResponse || fetchPromise;
       });
     })
